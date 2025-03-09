@@ -1,0 +1,11 @@
+[package]
+name = "parser"
+version = "0.1.0"
+edition = "2024"
+
+[build-dependencies]
+cc="*" # for tree-sitter
+
+[dependencies]
+tree-sitter = "0.24"  # for tree-sitter
+tree-sitter-rust = "0.23"  # for tree-sitter
