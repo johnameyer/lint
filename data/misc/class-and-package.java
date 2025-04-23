@@ -1,0 +1,3 @@
+package mypackage;
+
+class Class { }

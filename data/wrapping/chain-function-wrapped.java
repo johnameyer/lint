@@ -1,0 +1,5 @@
+myClass.operator()
+    .chainedMap(MyClass::method)
+    .chainedMap(MyClass::method)
+    .chainedMap(MyClass::method)
+    .chainedMap(MyClass::method)

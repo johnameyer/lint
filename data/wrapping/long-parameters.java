@@ -1,0 +1,3 @@
+myClass.myFunction(
+  oneLine, test
+);

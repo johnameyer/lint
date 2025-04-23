@@ -1,0 +1,36 @@
+class Test {
+    void function() {
+        expr * expr;
+        expr / expr;
+        expr % expr;
+        expr + expr;
+        expr - expr;
+        expr << expr;
+        expr >> expr;
+        expr >>> expr;
+        expr < expr;
+        expr > expr;
+        expr <= expr;
+        expr >= expr;
+        expr instanceof expr;
+        expr == expr;
+        expr != expr;
+        expr & expr;
+        expr ^ expr;
+        expr | expr;
+        expr && expr;
+        expr || expr;
+        expr = expr;
+        expr += expr;
+        expr -= expr;
+        expr *= expr;
+        expr /= expr;
+        expr %= expr;
+        expr &= expr;
+        expr ^= expr;
+        expr |= expr;
+        expr <<= expr;
+        expr >>= expr;
+        expr >>>= expr;
+    }
+}

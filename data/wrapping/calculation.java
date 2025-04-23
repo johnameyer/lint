@@ -1,0 +1,1 @@
+isSomethingTrue && isSomethingElseTrue || isSomethingElseTrue && somethingIsTrue;

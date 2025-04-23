@@ -1,0 +1,2 @@
+myClass
+    .myFunction()
