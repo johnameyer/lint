@@ -9,3 +9,6 @@ cc="*" # for tree-sitter
 [dependencies]
 tree-sitter = "0.24"  # for tree-sitter
 tree-sitter-rust = "0.23"  # for tree-sitter
+
+[dev-dependencies]
+test_each_file = "0.3.4"
