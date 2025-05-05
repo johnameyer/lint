@@ -1,4 +1,0 @@
-myClass.myFunction(
-  oneLine,
-  test
-);

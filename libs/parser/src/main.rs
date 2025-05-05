@@ -3,6 +3,7 @@ use std::{
     fs::{read_to_string, write},
 };
 
+use debug::print_as_tree;
 use load_parser::{Language, get_tree_sitter_language};
 
 use print::print2;
@@ -44,6 +45,9 @@ fn handle(parser: &mut Parser, path: String) {
 
     let tree = parser.parse(&source_code, None).unwrap();
 
+    // TODO take as debug arg
+    print_as_tree(&tree.root_node(), 0);
+
     // is this an issue for unicode characters outside ascii?
     let formatted = print2(source_code.as_bytes(), &tree.root_node());
 
@@ -52,7 +56,6 @@ fn handle(parser: &mut Parser, path: String) {
 
 #[cfg(test)]
 mod tests {
-    use crate::debug::print_as_tree;
 
     use super::*;
 

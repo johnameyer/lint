@@ -1,1 +1,1 @@
-while(condition) { }
+while (condition) { }

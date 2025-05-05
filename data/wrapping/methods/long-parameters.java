@@ -1,0 +1,3 @@
+myLongClassName.myLongFunctionName(
+  myReallyStupidlyLongValueName, myReallyStupidlyLongValueName, myReallyStupidlyLongValueName
+);
