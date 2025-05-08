@@ -6,13 +6,16 @@ use std::{
 use debug::print_as_tree;
 use load_parser::{Language, get_tree_sitter_language};
 
-use print::print2;
+use print::print;
 use tree_sitter::Parser;
 
 mod load_parser;
 
 mod debug;
 mod print;
+mod render;
+mod transform;
+mod format_node;
 
 // use crate::print::print;
 
@@ -49,7 +52,7 @@ fn handle(parser: &mut Parser, path: String) {
     print_as_tree(&tree.root_node(), 0);
 
     // is this an issue for unicode characters outside ascii?
-    let formatted = print2(source_code.as_bytes(), &tree.root_node());
+    let formatted = print(source_code.as_bytes(), &tree.root_node());
 
     write(&path, formatted).expect("Unable to write to file");
 }
@@ -71,7 +74,7 @@ mod tests {
         print_as_tree(&tree.root_node(), 0);
 
         // is this an issue for unicode characters outside ascii?
-        let formatted = print2(content.as_bytes(), &tree.root_node());
+        let formatted = print(content.as_bytes(), &tree.root_node());
 
         // println!("{}", formatted);
 
