@@ -1,64 +1,81 @@
-use crate::format_node::FormatNode;
+use crate::format_node::{FormatNode, WrapArguments};
 
 const INDENT: &str = "    ";
 
-pub fn prettyprint(formatted: &FormatNode, parent_wrap: bool) -> String {
+pub struct PrettyPrintResult {
+    pub result: String,
+    is_wrapped: bool,
+}
+
+impl From<String> for PrettyPrintResult {
+    fn from(value: String) -> Self {
+        PrettyPrintResult {
+            result: value,
+            is_wrapped: false,
+        }
+    }
+}
+
+const max_line_length: usize = 100;
+
+pub fn prettyprint(formatted: &FormatNode, parent_wrap: bool) -> PrettyPrintResult {
     // println!("{:?}", formatted);
 
     let transformed = print(formatted, false, parent_wrap);
 
-    if transformed.lines().any(|line| line.len() > 100) {
+    let can_wrap = match formatted {
+        FormatNode::Group(elements) => elements
+            .iter()
+            .any(|element| matches!(element, FormatNode::Wrap { .. })),
+        _ => false,
+    };
+
+    // can only wrap if any children are wrapped
+
+    if can_wrap && (transformed.is_wrapped || transformed.result.lines().any(|line| line.len() > max_line_length)) {
         let new = print(formatted, true, parent_wrap);
 
-        if transformed.lines().any(|line| line.len() > 100) {
+        if transformed.result.lines().any(|line| line.len() > 100) {
             // panic!("Unexpectedly long line! {:?} {:?}", formatted, transformed);
         }
 
-        new
+        PrettyPrintResult {
+            result: new.result,
+            is_wrapped: true,
+        }
     } else {
-        transformed
+        PrettyPrintResult {
+            result: transformed.result,
+            is_wrapped: false,
+        }
     }
 }
 
-fn print(formatted: &FormatNode, wrap: bool, parent_wrap: bool) -> String {
+fn print(formatted: &FormatNode, wrap: bool, parent_wrap: bool) -> PrettyPrintResult {
     match formatted {
-        FormatNode::Content(content) => content.to_string(),
+        FormatNode::Content(content) => content.to_string().into(),
         FormatNode::Group(elements) => elements
             .iter()
             .map(|element| prettyprint(element, wrap))
-            .collect(),
-        // FormatNode::Indent(elements) => {
-        //     if elements.len() > 3 {
-        //         let transformed = elements
-        //             .iter()
-        //             .map(|element| prettyprint(element, wrap))
-        //             .collect::<String>();
-
-        //         let as_lines = transformed.lines().collect::<Vec<&str>>();
-
-        //         let len = as_lines.len();
-
-        //         as_lines
-        //             .into_iter()
-        //             .enumerate()
-        //             .map(|(i, line)| {
-        //                 if i == 0 || i == len - 1 {
-        //                     line.to_string()
-        //                 } else {
-        //                     (INDENT.to_owned() + line).to_owned()
-        //                 }
-        //             })
-        //             .collect::<Vec<String>>()
-        //             .join("\n")
-        //             .to_owned()
-        //     } else {
-        //         "{ }".to_owned()
-        //     }
-        // }
-        FormatNode::Wrap {
+            .reduce(|acc, item| PrettyPrintResult {
+                result: acc.result + &item.result,
+                is_wrapped: acc.is_wrapped || item.is_wrapped,
+            })
+            .unwrap(),
+        FormatNode::Wrap(WrapArguments {
             wrap_with_indent,
             or_space,
-        } => {
+        }) => {
+            // if parent_wrap {
+            //     "\n".to_owned() + &if *wrap_with_indent { indent(prettyprint(&element, wrap).result) } else { "".to_owned() }
+            // } else {
+            //     if *or_space {
+            //         " ".to_owned()
+            //     } else {
+            //         "".to_owned()
+            //     }
+            // }
+            // .into(),
             if parent_wrap {
                 "\n".to_owned() + if *wrap_with_indent { INDENT } else { "" }
             } else {
@@ -68,15 +85,23 @@ fn print(formatted: &FormatNode, wrap: bool, parent_wrap: bool) -> String {
                     "".to_owned()
                 }
             }
+            .into()
         }
-        // TODO when we indent, we need to indent all of the next element
-        FormatNode::Indent(element) => prettyprint(element, wrap)
-            .lines()
-            .map(|line| (INDENT.to_owned()) + line)
-            .collect::<Vec<String>>()
-            .join("\n"),
-        FormatNode::Newline => "\n".to_owned(),
-        FormatNode::Space => " ".to_owned(),
-        _ => "".to_string(),
+        FormatNode::Indent(element) => indent(prettyprint(element, wrap).result).into(),
+        FormatNode::Newline => "\n".to_owned().into(),
+        FormatNode::Space => " ".to_owned().into(),
+        FormatNode::WrapBoundary(element) => PrettyPrintResult {
+            result: prettyprint(element, wrap).result,
+            is_wrapped: false,
+        },
+        _ => "".to_string().into(),
     }
+}
+
+fn indent(content: String) -> String {
+    content
+        .lines()
+        .map(|line| (INDENT.to_owned()) + line)
+        .collect::<Vec<String>>()
+        .join("\n")
 }

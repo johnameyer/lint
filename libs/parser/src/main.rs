@@ -12,10 +12,10 @@ use tree_sitter::Parser;
 mod load_parser;
 
 mod debug;
+mod format_node;
 mod print;
 mod render;
 mod transform;
-mod format_node;
 
 // use crate::print::print;
 
