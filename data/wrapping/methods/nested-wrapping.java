@@ -1,5 +1,5 @@
-myReallyReallyReallyReallyStupidlyLongMemberName
-    .myReallyReallyReallyReallyStupidlyLongFunctionName(
-      myReallyReallyReallyReallyStupidlyLongMemberName
-        .myReallyReallyReallyReallyStupidlyLongFunctionName(value, value, value)
-  );
+myReallyReallyReallyReallyReallyStupidlyLongMemberName
+    .myReallyReallyReallyReallyReallyReallyStupidlyLongFunctionName(
+        myReallyReallyReallyReallyStupidlyLongMemberName
+            .myReallyReallyReallyReallyStupidlyLongFunctionName()
+    );

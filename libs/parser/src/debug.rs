@@ -1,5 +1,7 @@
 use tree_sitter::Node;
 
+use crate::format_node::FormatNode;
+
 pub fn print_as_tree(node: &Node, indent: usize) {
     println!("{}{}", " ".repeat(indent), node.grammar_name());
 

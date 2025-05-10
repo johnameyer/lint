@@ -1,0 +1,6 @@
+if (
+    myReallyReallyReallyReallyStupidlyLongMemberName
+        .myReallyReallyReallyReallyStupidlyLongFunctionName()
+) {
+    stmt;
+}

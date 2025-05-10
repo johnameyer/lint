@@ -1,5 +1,3 @@
-myClass.operator()
-    .chainedMap(MyClass::method)
-    .chainedMap(MyClass::method)
-    .chainedMap(MyClass::method)
-    .chainedMap(MyClass::method)
+myReallyReallyReallyReallyStupidlyLongMemberName.myReallyLongFunctionName()
+    .myReallyReallyReallyStupidlyLongFunctionName()
+    .myReallyReallyReallyStupidlyLongFunctionName()

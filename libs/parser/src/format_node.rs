@@ -4,7 +4,7 @@ pub enum FormatNode {
     Group(Vec<FormatNode>),
     // Indent(Vec<FormatNode>),
     Indent(Box<FormatNode>),
-    Wrap(WrapArguments),
+    Wrap(Box<FormatNode>, WrapArguments),
     // WrapGroup
     Space,
     WrapBoundary(Box<FormatNode>), // do we need aside from indent?
@@ -14,6 +14,7 @@ pub enum FormatNode {
 
 #[derive(Debug)]
 pub struct WrapArguments {
+    pub child_wrap_prevents_wrap: bool,
     pub wrap_with_indent: bool,
     pub or_space: bool,
 }

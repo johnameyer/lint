@@ -1,0 +1,3 @@
+try (
+    var x = expr
+) { }

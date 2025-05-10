@@ -12,16 +12,18 @@ struct FormatArguments {
     indent: bool,         // TODO do we need a separate one for wrap and indent?
     wrap: bool,
     prevent_wrap_cascade: bool,
-    wrap_if_child: bool,
+    child_wrap_prevents_wrap: bool,
 }
 
+// TODO introduce generic abstaction over Node
 pub fn transform(source_code: &[u8], node: &Node) -> FormatNode {
     let node_type = node.grammar_name(); // TODO parent
     // TODO determine whether to use _type or _name
 
+    #[derive(Debug)]
     struct FormatContainer {
         children: Vec<FormatNode>,
-        // wrapping: Option<WrapArguments>,
+        wrapping: Option<WrapArguments>,
     }
 
     // TODO consider writing using TreeCursor
@@ -30,10 +32,14 @@ pub fn transform(source_code: &[u8], node: &Node) -> FormatNode {
         // TODO for WrapIfChild should we have a wrap boundary?
         let mut stack: Vec<FormatContainer> = vec![FormatContainer {
             children: Vec::new(),
-            // wrapping: None
+            wrapping: None
         }];
 
+        let mut stack_pushers_depth: Vec<usize> = vec![];
+
         let mut between = FormatArguments::default();
+
+        // TODO create a local pop function
 
         for child in (0..node.child_count()).map(|i| node.child(i).unwrap()) {
             let child_name = child.grammar_name();
@@ -45,41 +51,40 @@ pub fn transform(source_code: &[u8], node: &Node) -> FormatNode {
                 pre_visit(node_type, &mut between, child_name, previous_name);
             }
 
+            if between.wrap {
+                let previous = stack.pop().unwrap();
+                if let Some(wrapping) = previous.wrapping {
+                    stack.last_mut().unwrap().children.push(FormatNode::Wrap(FormatNode::Group(previous.children).into(), wrapping));
+                    // stack.last_mut().unwrap().children.push(FormatNode::Group(previous.children));
+                } else {
+                    stack.push(FormatContainer { children: previous.children, wrapping: previous.wrapping }); // TODO makes sense?
+                }
+                stack.push(FormatContainer { children: Vec::new(), wrapping: Some(WrapArguments {
+                    child_wrap_prevents_wrap: between.child_wrap_prevents_wrap,
+                    wrap_with_indent: between.indent,
+                    or_space: between.space,
+                })});
+
+                // TODO condense nested groups?
+            }
+
             // stack push
-            if get().stack_pushers.contains(child_name) {
-                stack.push(FormatContainer {
-                    children: Vec::new(),
-                    // wrapping: None,
-                });
+            if let Some(previous) = child.prev_sibling() {
+                if get().stack_pushers.contains(previous.grammar_name()) && !get().stack_poppers.contains(child_name) {
+                    stack_pushers_depth.push(stack.len());
+
+                    stack.push(FormatContainer {
+                        children: Vec::new(),
+                        wrapping: None,
+                    });
+                }
             }
 
             // process
             let processed = transform(source_code, &child);
 
-            // if between.wrap {
-            //     let previous = stack.pop().unwrap();
-            //     if let Some(wrap_arguments) = previous.wrapping {
-            //         stack.last_mut().unwrap().children.push(FormatNode::Wrap(previous.children));
-            //     } else {
-            //         stack.last_mut().unwrap().children.push(FormatNode::Group(previous.children));
-            //     }
-            //     stack.push(FormatContainer { children: Vec::new(), wrapping: Some(WrapArguments {
-            //         wrap_with_indent: between.indent,
-            //         or_space: between.space,
-            //     })});
-            // }
-
             match between {
-                FormatArguments { wrap: true, .. } => {
-                    stack
-                        .last_mut()
-                        .unwrap()
-                        .children
-                        .push(FormatNode::Wrap(WrapArguments {
-                            wrap_with_indent: between.indent,
-                            or_space: between.space,
-                        }))
-                }
+                FormatArguments { wrap: true, .. } => { }
                 FormatArguments {
                     double_newline: true,
                     ..
@@ -113,18 +118,31 @@ pub fn transform(source_code: &[u8], node: &Node) -> FormatNode {
             between = FormatArguments::default();
 
             // stack pop
-            if get().stack_poppers.contains(child_name) {
-                let last = stack.pop().unwrap();
+            if let Some(next) = child.next_sibling() {
+                if stack_pushers_depth.len() == 0 {
+                    // Warn
+                } else if get().stack_poppers.contains(next.grammar_name()) {
+                    let expected_depth = stack_pushers_depth.pop().unwrap();
 
-                stack
-                    .last_mut()
-                    .unwrap()
-                    .children
-                    .push(FormatNode::Group(last.children));
+                    while stack.len() > expected_depth {
+                        let last = stack.pop().unwrap();
+
+                        stack
+                            .last_mut()
+                            .unwrap()
+                            .children
+                            .push(match last {
+                                FormatContainer { children, wrapping: Some(wrapping) } => FormatNode::Wrap(FormatNode::Group(children).into(), wrapping),
+                                FormatContainer { children, .. } => FormatNode::Group(children)
+                            });
+                    }
+                }
             }
 
             // postprocess
             if let Some(next) = child.next_sibling() {
+                let next_name = next.grammar_name();
+
                 let has_multiple_newlines =
                     (next.start_position().row - child.end_position().row) > 1;
 
@@ -132,12 +150,18 @@ pub fn transform(source_code: &[u8], node: &Node) -> FormatNode {
             }
         }
 
+        // TODO need to put the last item in a wrap as well?
+
         return FormatNode::Group(
             stack
                 .into_iter()
                 .rev()
                 .reduce(|child, mut parent| {
-                    parent.children.push(FormatNode::Group(child.children));
+                    if let Some(wrap_arguments) = child.wrapping {
+                        parent.children.push(FormatNode::Wrap(FormatNode::Group(child.children).into(), wrap_arguments));
+                    } else {
+                        parent.children.push(FormatNode::Group(child.children));
+                    }
                     return parent;
                 })
                 .unwrap()
@@ -178,19 +202,21 @@ fn pre_visit(node_type: &'static str, between: &mut FormatArguments, child_name:
     if get().add_wrap_before.contains(child_name) {
         between.wrap = true;
         between.indent = true;
+        between.child_wrap_prevents_wrap = true;
     }
 
     if get().wrap_list.contains(node_type) {
-        if previous_name == "(" {
+        if previous_name == "(" || previous_name == "{" {
             between.wrap = true;
             between.indent = true; // TODO do we need to separate both?
+            // between.child_wrap_prevents_wrap = false;
         } else if previous_name == "," {
             between.wrap = true;
-            between.indent = true; // TODO do we need to separate both?
+            // between.indent = true; // TODO do we need to separate both?
             between.space = true;
         }
 
-        if child_name == ")" {
+        if child_name == ")" || child_name == "}" {
             between.wrap = true;
         }
     }
@@ -369,7 +395,7 @@ fn get() -> FormatConfig {
             "catch",
         ]),
 
-        wrap_list: HashSet::from(["argument_list", "parenthesized_expression"]),
+        wrap_list: HashSet::from(["argument_list", "parenthesized_expression", "array_initializer"]),
 
         // TODO generic method call
 
@@ -379,8 +405,8 @@ fn get() -> FormatConfig {
 
         add_wrap_before: HashSet::from(["."]),
 
-        stack_pushers: HashSet::from(["(", "{", "["]),
+        stack_pushers: HashSet::from(["(", "{"]),
 
-        stack_poppers: HashSet::from([")", "}", "]"]),
+        stack_poppers: HashSet::from([")", "}"]),
     }
 }
