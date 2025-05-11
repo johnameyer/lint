@@ -33,7 +33,14 @@ const MAX_LINE_LENGTH: usize = 100;
 pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> PrettyPrintResult {
     // println!("{:?}", formatted);
 
-    let transformed = print(formatted, WrapParameters { wrap_because_length: false, wrap_because_child: false }, parent_wrap);
+    let transformed = print(
+        formatted,
+        WrapParameters {
+            wrap_because_length: false,
+            wrap_because_child: false,
+        },
+        parent_wrap,
+    );
 
     let can_wrap = match formatted {
         FormatNode::Group(elements) => elements
@@ -42,11 +49,23 @@ pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> Prett
         _ => false,
     };
 
-    if can_wrap && (transformed.is_wrapped || transformed.result.lines().any(|line| line.len() > MAX_LINE_LENGTH)) {
+    if can_wrap
+        && (transformed.is_wrapped
+            || transformed
+                .result
+                .lines()
+                .any(|line| line.len() > MAX_LINE_LENGTH))
+    {
         let wrap_because_child = transformed.is_wrapped;
-        let wrap_because_length = transformed.result.lines().any(|line| line.len() > MAX_LINE_LENGTH);
+        let wrap_because_length = transformed
+            .result
+            .lines()
+            .any(|line| line.len() > MAX_LINE_LENGTH);
 
-        let params = WrapParameters { wrap_because_length, wrap_because_child };
+        let params = WrapParameters {
+            wrap_because_length,
+            wrap_because_child,
+        };
 
         let new = print(formatted, params, parent_wrap);
 
@@ -71,7 +90,11 @@ pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> Prett
 
 // TODO analyze the tree based on computed widths before constructing strings and transform to processed tree for analysis?
 
-fn print(formatted: &FormatNode, wrap: WrapParameters, parent_wrap: WrapParameters) -> PrettyPrintResult {
+fn print(
+    formatted: &FormatNode,
+    wrap: WrapParameters,
+    parent_wrap: WrapParameters,
+) -> PrettyPrintResult {
     // let wrap_children = wrap.wrap_because_length || wrap.wrap_because_child;
 
     match formatted {
@@ -84,15 +107,23 @@ fn print(formatted: &FormatNode, wrap: WrapParameters, parent_wrap: WrapParamete
                 is_wrapped: acc.is_wrapped || item.is_wrapped,
             })
             .unwrap(),
-        FormatNode::Wrap(element, WrapArguments {
-            wrap_with_indent,
-            or_space,
-            child_wrap_prevents_wrap,
-        }) => {
+        FormatNode::Wrap(
+            element,
+            WrapArguments {
+                wrap_with_indent,
+                or_space,
+                child_wrap_prevents_wrap,
+            },
+        ) => {
             let should_wrap = parent_wrap.wrap_because_length || parent_wrap.wrap_because_child;
             let content = prettyprint(&element, wrap);
             let transformed_content = if should_wrap {
-                "\n".to_owned() + &if *wrap_with_indent { indent(content.result) } else { content.result }
+                "\n".to_owned()
+                    + &if *wrap_with_indent {
+                        indent(content.result)
+                    } else {
+                        content.result
+                    }
             } else {
                 if *or_space {
                     " ".to_owned() + &content.result
@@ -122,7 +153,6 @@ fn print(formatted: &FormatNode, wrap: WrapParameters, parent_wrap: WrapParamete
         //     result: prettyprint(element, wrap_children).result,
         //     is_wrapped: false,
         // },
-        _ => "".to_string().into(),
     }
 }
 

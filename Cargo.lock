@@ -21,8 +21,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "lint"
+name = "format"
 version = "0.1.0"
+dependencies = [
+ "parser",
+ "test_each_file",
+]
 
 [[package]]
 name = "memchr"

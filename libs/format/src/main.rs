@@ -4,12 +4,11 @@ use std::{
 };
 
 use debug::print_as_tree;
-use load_parser::{Language, get_tree_sitter_language};
 
+use parser::{language::Language, parser::Parser};
 use print::print;
-use tree_sitter::Parser;
 
-mod load_parser;
+// mod load_parser;
 
 mod debug;
 mod format_node;
@@ -22,7 +21,7 @@ mod transform;
 fn main() {
     println!("Hello, world!");
 
-    let mut parser = build_parser(&Language::Java);
+    let mut parser = Parser::of(Language::Java);
 
     for arg in args().skip(1) {
         // TODO handle directories / paths not ending with java
@@ -32,27 +31,16 @@ fn main() {
     }
 }
 
-fn build_parser(language: &Language) -> Parser {
-    let language = get_tree_sitter_language(language);
-
-    let mut parser = Parser::new();
-
-    parser
-        .set_language(&language)
-        .expect("Error loading Rust grammar");
-    parser
-}
-
 fn handle(parser: &mut Parser, path: String) {
     let source_code = read_to_string(&path).unwrap();
 
-    let tree = parser.parse(&source_code, None).unwrap();
+    let tree = parser.parse(&source_code).unwrap();
 
     // TODO take as debug arg
-    print_as_tree(&tree.root_node(), 0);
+    print_as_tree(&tree, 0);
 
     // is this an issue for unicode characters outside ascii?
-    let formatted = print(source_code.as_bytes(), &tree.root_node());
+    let formatted = print(&tree);
 
     write(&path, formatted).expect("Unable to write to file");
 }
@@ -67,14 +55,14 @@ mod tests {
     test_each_file! { in "./data" => test }
 
     fn test(content: &str) {
-        let mut parser = build_parser(&Language::Java);
+        let mut parser = Parser::of(Language::Java);
 
-        let tree = parser.parse(&content, None).unwrap();
+        let tree = parser.parse(&content).unwrap();
 
-        print_as_tree(&tree.root_node(), 0);
+        print_as_tree(&tree, 0);
 
         // is this an issue for unicode characters outside ascii?
-        let formatted = print(content.as_bytes(), &tree.root_node());
+        let formatted = print(&tree);
 
         // println!("{}", formatted);
 

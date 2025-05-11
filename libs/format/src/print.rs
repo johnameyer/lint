@@ -1,24 +1,22 @@
-use tree_sitter::Node;
+use parser::tree::Tree;
 
 use crate::format_node::FormatNode;
-use crate::render::{prettyprint, WrapParameters};
+use crate::render::{WrapParameters, prettyprint};
 use crate::transform::transform;
 
-pub fn print(source_code: &[u8], node: &Node) -> String {
-    print_as_tree(&transform(source_code, node), 0);
-    return prettyprint(&transform(source_code, node), WrapParameters::default()).result + "\n";
+pub fn print(node: &Tree) -> String {
+    print_as_tree(&transform(node), 0);
+    return prettyprint(&transform(node), WrapParameters::default()).result + "\n";
 }
 
 pub fn print_as_tree(node: &FormatNode, indent: usize) {
     let name = match node {
-        FormatNode::Content(content) => "Content",
+        FormatNode::Content(_) => "Content",
         FormatNode::Group(_) => "Group",
         FormatNode::Indent(_) => "Indent",
         FormatNode::Wrap(_, _) => "Wrap",
         FormatNode::Space => "Space",
-        FormatNode::WrapBoundary(_) => "WrapBoundary",
         FormatNode::Newline => "Newline",
-        FormatNode::Empty => "Empty",
     };
 
     println!("{}{}", " ".repeat(indent), name);
@@ -39,16 +37,6 @@ pub fn print_as_tree(node: &FormatNode, indent: usize) {
         FormatNode::Indent(format_node) => print_as_tree(format_node, indent + 4),
         FormatNode::Wrap(format_node, _) => print_as_tree(format_node, indent + 4),
         FormatNode::Space => (),
-        FormatNode::WrapBoundary(format_node) => print_as_tree(format_node, indent + 4),
         FormatNode::Newline => (),
-        FormatNode::Empty => (),
     };
 }
-
-// stack
-
-// parent: String
-// next: String
-
-// Node matchers emit to stack?
-// pop off created groups at conclusion of element

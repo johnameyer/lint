@@ -7,9 +7,9 @@ pub enum FormatNode {
     Wrap(Box<FormatNode>, WrapArguments),
     // WrapGroup
     Space,
-    WrapBoundary(Box<FormatNode>), // do we need aside from indent?
+    // WrapBoundary(Box<FormatNode>), // do we need aside from indent?
     Newline,
-    Empty,
+    // Empty,
 }
 
 #[derive(Debug)]

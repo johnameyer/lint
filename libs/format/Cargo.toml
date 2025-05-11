@@ -1,0 +1,10 @@
+[package]
+name = "format"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+parser = { path = "../parser" }
+
+[dev-dependencies]
+test_each_file = "0.3.4"
