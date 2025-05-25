@@ -20,7 +20,7 @@ impl Tree<'_> {
     pub fn range(&self) -> &tree_sitter::Range {
         &self.range
     }
-    
+
     pub fn text(&self) -> &str {
         &self.source[self.range.start_byte..self.range.end_byte]
     }

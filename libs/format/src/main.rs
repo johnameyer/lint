@@ -52,9 +52,9 @@ mod tests {
 
     use test_each_file::test_each_file;
 
-    test_each_file! { in "./data" => test }
+    test_each_file! { in "./data" => compare_parsed_to_original }
 
-    fn test(content: &str) {
+    fn compare_parsed_to_original(content: &str) {
         let mut parser = Parser::of(Language::Java);
 
         let tree = parser.parse(&content).unwrap();
