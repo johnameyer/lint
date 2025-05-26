@@ -1,1 +1,2 @@
-isSomethingTrue && isSomethingElseTrue || isSomethingElseTrue && somethingIsTrue;
+isSomethingReallyLongTrue && isSomethingElseReallyLongTrue
+    || isSomethingElseReallyLongTrue && somethingReallyLongIsTrue;

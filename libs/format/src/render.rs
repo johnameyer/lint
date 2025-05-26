@@ -62,6 +62,9 @@ pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> Prett
             .lines()
             .any(|line| line.len() > MAX_LINE_LENGTH);
 
+        // TODO sometimes we fail to properly wrap a child, causing our parent to wrap when it shouldn't see unwrappable-child test example
+        // This check against all children can potentially cause slowdowns as well
+
         let params = WrapParameters {
             wrap_because_length,
             wrap_because_child,

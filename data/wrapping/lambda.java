@@ -1,1 +1,3 @@
-sort(param -> param)
+myReallyReallyLongFunctionName(
+    myReallyReallyLongParam -> myReallyReallyLongParam
+)

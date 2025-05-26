@@ -51,6 +51,7 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
             {
                 let previous_name = previous.name();
 
+                // Should we always call this?
                 pre_visit(parent_name, &mut between, child_name, previous_name);
             }
 

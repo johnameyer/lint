@@ -7,7 +7,24 @@ pub(super) fn pre_visit(parent: &str, between: &mut FormatArguments, child: &str
     //     stack.last_mut().unwrap().children.push(FormatNode::Newline);
     // }
 
-    if get().add_wrap_before.contains(child) {
+    // TODO should we just have a list of syntax elements / nonleaf nodes
+    if parent == "binary_expression" {
+        if get().multi_operators.contains(child) {
+            between.wrap = true;
+            between.indent = true;
+            between.child_wrap_prevents_wrap = true;
+        }
+    }
+
+    if parent == "variable_declarator" {
+        if previous == "=" {
+            between.wrap = true;
+            between.indent = true;
+            between.child_wrap_prevents_wrap = true;
+        }
+    }
+
+    if get().add_wrap_before.contains(child) && parent != "scoped_identifier" {
         between.wrap = true;
         between.indent = true;
         between.child_wrap_prevents_wrap = true;
@@ -103,6 +120,7 @@ pub(super) struct FormatConfig {
     wrap_list: HashSet<&'static str>,
     no_space_after: HashSet<&'static str>,
     add_wrap_before: HashSet<&'static str>,
+    multi_operators: HashSet<&'static str>,
     pub stack_pushers: HashSet<&'static str>,
     pub stack_poppers: HashSet<&'static str>,
 }
@@ -203,6 +221,7 @@ pub(super) fn get() -> FormatConfig {
             "argument_list",
             "parenthesized_expression",
             "array_initializer",
+            "formal_parameters",
         ]),
 
         // TODO generic method call
@@ -215,5 +234,42 @@ pub(super) fn get() -> FormatConfig {
         stack_pushers: HashSet::from(["(", "{"]),
 
         stack_poppers: HashSet::from([")", "}"]),
+
+        multi_operators: HashSet::from([
+            "?",
+            ":",
+            "*",
+            "/",
+            "%",
+            "+",
+            "-",
+            "<<",
+            ">>",
+            ">>>",
+            "<",
+            ">",
+            "<=",
+            ">=",
+            "instanceof",
+            "==",
+            "!=",
+            "&",
+            "^",
+            "|",
+            "&&",
+            "||",
+            "=",
+            "+=",
+            "-=",
+            "*=",
+            "/=",
+            "%=",
+            "&=",
+            "^=",
+            "|=",
+            "<<=",
+            ">>=",
+            ">>>=",
+        ]),
     }
 }
