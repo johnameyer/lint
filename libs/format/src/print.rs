@@ -1,14 +1,15 @@
 use parser::tree::Tree;
 
 use crate::format_node::FormatNode;
-use crate::render::{WrapParameters, prettyprint};
+use crate::render::{prettyprint, PrettyPrintParameters, WrapParameters};
 use crate::transform::transform;
 
-pub fn print(node: &Tree) -> String {
-    print_as_tree(&transform(node), 0);
-    return prettyprint(&transform(node), WrapParameters::default()).result + "\n";
+pub fn print(node: &Tree, arguments: &PrettyPrintParameters) -> String {
+    // print_as_tree(&transform(node), 0);
+    return prettyprint(&transform(node), arguments, WrapParameters::default()).result + "\n";
 }
 
+#[allow(dead_code)]
 pub fn print_as_tree(node: &FormatNode, indent: usize) {
     let name = match node {
         FormatNode::Content(_) => "Content",

@@ -1,14 +1,21 @@
 use std::{
-    env::args, ffi::OsStr, fs::{read_to_string, write}, path::Path
+    env::args,
+    ffi::OsStr,
+    fs::{read_to_string, write},
+    path::{Path, absolute},
 };
 
+#[allow(unused_imports)]
 use debug::print_as_tree;
 
+use editorconfig::EditorConfigResolver;
 use parser::{language::Language, parser::Parser};
 use print::print;
+use render::PrettyPrintParameters;
 use walkdir::WalkDir;
 
 mod debug;
+mod editorconfig;
 mod format_node;
 mod print;
 mod render;
@@ -19,14 +26,22 @@ fn main() {
 
     let mut parser = Parser::of(Language::Java);
 
-    for arg in args().skip(1) {
-        let path = Path::new(&arg);
+    let mut editor_config_resolver: EditorConfigResolver = EditorConfigResolver::new();
 
-        for entry_option in WalkDir::new(path) {
+    for arg in args().skip(1) {
+        let path = absolute(Path::new(&arg)).unwrap();
+
+        for entry_option in WalkDir::new(path).sort_by_file_name() {
             let entry: walkdir::DirEntry = entry_option.unwrap();
+            println!(
+                "Processing {:?} {}",
+                entry.path().extension(),
+                entry.path().display()
+            );
+
             if entry.file_type().is_file() {
                 if entry.path().extension().and_then(OsStr::to_str) == Some("java") {
-                    handle(&mut parser, entry.path());
+                    handle(&mut parser, &mut editor_config_resolver, entry.path());
                 }
                 // TODO non-java files
             }
@@ -34,16 +49,23 @@ fn main() {
     }
 }
 
-fn handle(parser: &mut Parser, path: &Path) {
+fn handle(parser: &mut Parser, editor_config_resolver: &mut EditorConfigResolver, path: &Path) {
+    let editorconfig = editor_config_resolver.resolve(path);
+
+    println!("Resolved to {:?}", editorconfig);
+
     let source_code = read_to_string(&path).unwrap();
 
     let tree = parser.parse(&source_code).unwrap();
 
     // TODO take as debug arg
-    print_as_tree(&tree, 0);
+    // print_as_tree(&tree, 0);
 
     // is this an issue for unicode characters outside ascii?
-    let formatted = print(&tree);
+    let formatted = print(&tree, &PrettyPrintParameters {
+        indent_size: editorconfig.indent_size.unwrap_or(4),
+        max_line_length: 100,
+    });
 
     write(&path, formatted).expect("Unable to write to file");
 }
@@ -65,7 +87,7 @@ mod tests {
         print_as_tree(&tree, 0);
 
         // is this an issue for unicode characters outside ascii?
-        let formatted = print(&tree);
+        let formatted = print(&tree, &PrettyPrintParameters { indent_size: 4, max_line_length: 100 });
 
         // println!("{}", formatted);
 

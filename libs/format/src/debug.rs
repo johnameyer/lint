@@ -1,5 +1,6 @@
 use parser::tree::Tree;
 
+#[allow(dead_code)]
 pub fn print_as_tree(node: &Tree, indent: usize) {
     println!("{}{}", " ".repeat(indent), node.name());
 

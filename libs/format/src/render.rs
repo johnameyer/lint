@@ -1,7 +1,5 @@
 use crate::format_node::{FormatNode, WrapArguments};
 
-const INDENT: &str = "    ";
-
 pub struct PrettyPrintResult {
     pub result: String,
     // TODO should we split this struct between the methods since the meaning is slightly different for both?
@@ -27,14 +25,20 @@ pub struct WrapParameters {
     // wrap_because_parent: bool,
 }
 
+pub struct PrettyPrintParameters {
+    pub(crate) indent_size: usize,
+    pub(crate) max_line_length: usize,
+}
+
 // TODO we need to integrate indentations with this
 const MAX_LINE_LENGTH: usize = 100;
 
-pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> PrettyPrintResult {
+pub fn prettyprint(formatted: &FormatNode, arguments: &PrettyPrintParameters, parent_wrap: WrapParameters) -> PrettyPrintResult {
     // println!("{:?}", formatted);
 
     let transformed = print(
         formatted,
+        arguments,
         WrapParameters {
             wrap_because_length: false,
             wrap_because_child: false,
@@ -54,13 +58,13 @@ pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> Prett
             || transformed
                 .result
                 .lines()
-                .any(|line| line.len() > MAX_LINE_LENGTH))
+                .any(|line| line.len() > arguments.max_line_length))
     {
         let wrap_because_child = transformed.is_wrapped;
         let wrap_because_length = transformed
             .result
             .lines()
-            .any(|line| line.len() > MAX_LINE_LENGTH);
+            .any(|line| line.len() > arguments.max_line_length);
 
         // TODO sometimes we fail to properly wrap a child, causing our parent to wrap when it shouldn't see unwrappable-child test example
         // This check against all children can potentially cause slowdowns as well
@@ -70,9 +74,9 @@ pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> Prett
             wrap_because_child,
         };
 
-        let new = print(formatted, params, parent_wrap);
+        let new = print(formatted, arguments, params, parent_wrap);
 
-        if transformed.result.lines().any(|line| line.len() > 100) {
+        if transformed.result.lines().any(|line| line.len() > arguments.max_line_length) {
             // panic!("Unexpectedly long line! {:?} {:?}", formatted, transformed);
         }
 
@@ -95,6 +99,7 @@ pub fn prettyprint(formatted: &FormatNode, parent_wrap: WrapParameters) -> Prett
 
 fn print(
     formatted: &FormatNode,
+    arguments: &PrettyPrintParameters,
     wrap: WrapParameters,
     parent_wrap: WrapParameters,
 ) -> PrettyPrintResult {
@@ -104,7 +109,7 @@ fn print(
         FormatNode::Content(content) => content.to_string().into(),
         FormatNode::Group(elements) => elements
             .iter()
-            .map(|element| prettyprint(element, wrap))
+            .map(|element| prettyprint(element, arguments, wrap))
             .reduce(|acc, item| PrettyPrintResult {
                 result: acc.result + &item.result,
                 is_wrapped: acc.is_wrapped || item.is_wrapped,
@@ -119,11 +124,11 @@ fn print(
             },
         ) => {
             let should_wrap = parent_wrap.wrap_because_length || parent_wrap.wrap_because_child;
-            let content = prettyprint(&element, wrap);
+            let content = prettyprint(&element, arguments, wrap);
             let transformed_content = if should_wrap {
                 "\n".to_owned()
                     + &if *wrap_with_indent {
-                        indent(content.result)
+                        indent(content.result, arguments.indent_size)
                     } else {
                         content.result
                     }
@@ -149,7 +154,7 @@ fn print(
             // }
             // .into()
         }
-        FormatNode::Indent(element) => indent(prettyprint(element, wrap).result).into(),
+        FormatNode::Indent(element) => indent(prettyprint(element, arguments, wrap).result, arguments.indent_size).into(),
         FormatNode::Newline => "\n".to_owned().into(),
         FormatNode::Space => " ".to_owned().into(),
         // FormatNode::WrapBoundary(element) => PrettyPrintResult {
@@ -159,10 +164,10 @@ fn print(
     }
 }
 
-fn indent(content: String) -> String {
+fn indent(content: String, indent_size: usize) -> String {
     content
         .lines()
-        .map(|line| (INDENT.to_owned()) + line)
+        .map(|line| (" ".repeat(indent_size).to_owned()) + line)
         .collect::<Vec<String>>()
         .join("\n")
 }
