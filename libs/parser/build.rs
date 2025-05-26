@@ -1,5 +1,5 @@
 use std::panic::catch_unwind;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
 
@@ -18,9 +18,14 @@ const PROJECTS: &[TreeSitterParser] = &[TreeSitterParser {
 }];
 
 fn main() {
-    let root_cwd = env::current_dir().unwrap();
+    let root_cwd = Path::new(env!("CARGO_MANIFEST_DIR"));
+    env::set_current_dir(&root_cwd).unwrap();
+
+    let out_dir = env::var("OUT_DIR").unwrap();
+
     for project in PROJECTS {
         let project_path: PathBuf = [
+            &out_dir,
             PARSER_CLONE_ROOT,
             &format!("{}@{}", &project.name, &project.commit),
         ]

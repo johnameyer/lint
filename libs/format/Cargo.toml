@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 parser = { path = "../parser" }
+walkdir = "2.5.0"
 
 [dev-dependencies]
 test_each_file = "0.3.4"
