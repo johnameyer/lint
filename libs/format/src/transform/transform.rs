@@ -100,14 +100,14 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
                 }
             }
 
-            if parent_name == "method_invocation" && index == 0 {
-                stack_pushers_depth.push(stack.len());
+            // if parent_name == "method_invocation" && index == 0 {
+            //     stack_pushers_depth.push(stack.len());
 
-                stack.push(FormatContainer {
-                    children: Vec::new(),
-                    wrapping: None,
-                });
-            }
+            //     stack.push(FormatContainer {
+            //         children: Vec::new(),
+            //         wrapping: None,
+            //     });
+            // }
 
             // process
             let processed = transform(&child);
@@ -150,7 +150,7 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
             if let Some(next) = node.children().get(index + 1) {
                 if stack_pushers_depth.len() == 0 {
                     // Warn
-                } else if get().stack_poppers.contains(next.name()) || (parent_name == "method_invocation" && index == 2) {
+                } else if get().stack_poppers.contains(next.name()) { // || (parent_name == "method_invocation" && index == 2)
                     let expected_depth = stack_pushers_depth.pop().unwrap();
 
                     while stack.len() > expected_depth {
@@ -182,6 +182,12 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
                     next_name,
                 );
             }
+
+            // if child_name == "marker_annotation" || child_name == "annotation" {
+            //     stack.last_mut().unwrap().children.push(FormatNode::Newline);
+            // } else if parent_name == "modifiers" && node.children().get(index + 1).is_none()  {
+            //     stack.last_mut().unwrap().children.push(FormatNode::Space);
+            // }
         }
 
         // TODO need to put the last item in a wrap as well?

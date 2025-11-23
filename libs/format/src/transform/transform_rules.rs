@@ -125,6 +125,14 @@ pub(super) fn post_visit(
         }
     }
 
+    // if parent == "field_declaration" && child != "modifiers" && next != ";" {
+    //     between.space = true;
+    // }
+
+    // if parent == "modifiers" && child != "marker_annotation" && child != "annotation" {
+    //     between.space = true;
+    // }
+
     if get().block_elements.contains(parent) {
         if has_multiple_newlines {
             between.double_newline = true;

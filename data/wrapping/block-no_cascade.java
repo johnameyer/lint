@@ -1,0 +1,4 @@
+{
+    myReallyReallyReallyReallyStupidlyLongMemberName
+        .myReallyReallyReallyReallyStupidlyLongFunctionName(a)
+}

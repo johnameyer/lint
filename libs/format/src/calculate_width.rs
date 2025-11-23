@@ -10,6 +10,7 @@ pub struct MaxWidthResult {
 
 // TODO do we need to take in WrapParameters?
 /// Gets the width of the longest line
+/// 
 /// Does not traverse into Indent blocks as wrapping does not cross that boundary
 pub fn get_longest_width(
     node: &FormatNode,
