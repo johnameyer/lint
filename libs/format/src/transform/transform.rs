@@ -12,7 +12,7 @@ pub(crate) struct FormatArguments {
     pub double_newline: bool, // ignores newline - TODO better way to model this?
     pub indent: bool,         // TODO do we need a separate one for wrap and indent?
     pub wrap: bool,
-    pub prevent_wrap_cascade: bool,
+    pub wrap_if_parent: bool,
     pub child_wrap_prevents_wrap: bool,
 }
 
@@ -75,6 +75,7 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
                         child_wrap_prevents_wrap: between.child_wrap_prevents_wrap,
                         wrap_with_indent: between.indent,
                         or_space: between.space,
+                        wrap_if_parent: between.wrap_if_parent,
                     }),
                 });
 
@@ -88,6 +89,7 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
             {
                 if get().stack_pushers.contains(previous.name())
                     && !get().stack_poppers.contains(child_name)
+                    && parent_name != "for_statement"
                 {
                     stack_pushers_depth.push(stack.len());
 
@@ -96,6 +98,15 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
                         wrapping: None,
                     });
                 }
+            }
+
+            if parent_name == "method_invocation" && index == 0 {
+                stack_pushers_depth.push(stack.len());
+
+                stack.push(FormatContainer {
+                    children: Vec::new(),
+                    wrapping: None,
+                });
             }
 
             // process
@@ -139,7 +150,7 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
             if let Some(next) = node.children().get(index + 1) {
                 if stack_pushers_depth.len() == 0 {
                     // Warn
-                } else if get().stack_poppers.contains(next.name()) {
+                } else if get().stack_poppers.contains(next.name()) || (parent_name == "method_invocation" && index == 2) {
                     let expected_depth = stack_pushers_depth.pop().unwrap();
 
                     while stack.len() > expected_depth {

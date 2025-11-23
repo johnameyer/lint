@@ -1,1 +1,4 @@
-myReallyReallyReallyReallyReallyStupidlyLongMemberName.myReallyReallyReallyReallyReallyStupidlyLongFunctionName(myReallyStupidlyLongValueName, myReallyStupidlyLongValueName)
+myReallyReallyReallyReallyReallyStupidlyLongMemberName
+    .myReallyReallyReallyReallyReallyStupidlyLongFunctionName(
+        myReallyStupidlyLongValueName, myReallyStupidlyLongValueName
+    );

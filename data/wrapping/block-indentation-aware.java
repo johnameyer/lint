@@ -1,0 +1,21 @@
+// NOTE: Tests that with indentation applied, the wrapping cutoff becomes more extreme
+{
+    {
+        {
+            {
+                {
+                    {
+                        {
+                            {
+                                {
+                                    myReallyReallyReallyLongMemberName
+                                        .myReallyReallyLongFunctionName()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

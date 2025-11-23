@@ -58,9 +58,11 @@ impl EditorConfigResolver {
         // Now we iterate the ancestors in reverse and resolve
         // TODO if we immediately get a cache hit...
         for current_path in ancestors.iter().rev().skip(ancestors.len() - first_uncached_index) {
-            let current = &parsed[current_path];
-
-            let combined = EditorConfig::combine(&previous, current);
+            let combined = if let Some(current) = parsed.get(current_path) {
+                EditorConfig::combine(&previous, current)
+            } else {
+                previous
+            };
 
             self.cache
                 .insert(current_path.as_os_str().to_os_string(), combined.clone());
@@ -114,6 +116,7 @@ fn parse_key_value<'lifetime>(
         .iter()
         .filter(|line| !line.starts_with("#") && !line.starts_with(";"))
         .filter(|line| line.contains("="))
+        // TODO do spaces matter?
         .map(|line| line.split(" = "))
         .map(|mut split| (split.next().unwrap(), split.next().unwrap()))
         .collect()
@@ -152,6 +155,7 @@ impl EditorConfig {
 #[derive(Default, Debug, Clone)]
 pub(crate) struct EditorConfigSettings {
     pub(crate) indent_size: Option<usize>,
+    pub(crate) max_line_length: Option<usize>,
 }
 
 impl EditorConfigSettings {
@@ -160,7 +164,8 @@ impl EditorConfigSettings {
         second: &EditorConfigSettings,
     ) -> EditorConfigSettings {
         EditorConfigSettings { 
-            indent_size: second.indent_size.or(first.indent_size)
+            indent_size: second.indent_size.or(first.indent_size),
+            max_line_length: second.max_line_length.or(first.max_line_length),
         }
     }
 }
@@ -169,6 +174,7 @@ impl From<HashMap<&str, &str>> for EditorConfigSettings {
     fn from(map: HashMap<&str, &str>) -> Self {
         EditorConfigSettings {
             indent_size: map.get("indent_size").and_then(|int| (**int).parse().ok()),
+            max_line_length: map.get("max_line_length").and_then(|int| (**int).parse().ok()),
         }
     }
 }

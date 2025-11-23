@@ -24,6 +24,23 @@ pub(super) fn pre_visit(parent: &str, between: &mut FormatArguments, child: &str
         }
     }
 
+    if parent == "for_statement" {
+        if previous != "for" && child != ";" && child != "block" {
+            between.wrap = true;
+            if child != ")" {
+                between.indent = true;
+            }
+            between.child_wrap_prevents_wrap = true;
+        }
+    }
+
+    if child == "." {
+        between.wrap_if_parent = true;
+        if previous == "identifier" {
+            between.wrap_if_parent = false;
+        }
+    }
+
     if get().add_wrap_before.contains(child) && parent != "scoped_identifier" {
         between.wrap = true;
         between.indent = true;
@@ -44,10 +61,16 @@ pub(super) fn pre_visit(parent: &str, between: &mut FormatArguments, child: &str
         if child == ")" || child == "}" {
             between.wrap = true;
         }
+
+        if (previous == "(" && child == ")") || (previous == "{" && child == "}") {
+            between.wrap = false;
+            between.space = false;
+            between.indent = false;
+        }
     }
 
     if parent == "program" || get().block_elements.contains(parent) {
-        between.prevent_wrap_cascade = true;
+        between.wrap_if_parent = false;
 
         if child == "}" {
             if previous == "{" {

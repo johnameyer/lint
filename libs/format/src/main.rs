@@ -20,6 +20,7 @@ mod format_node;
 mod print;
 mod render;
 mod transform;
+mod calculate_width;
 
 fn main() {
     println!("Hello, world!");
@@ -64,7 +65,7 @@ fn handle(parser: &mut Parser, editor_config_resolver: &mut EditorConfigResolver
     // is this an issue for unicode characters outside ascii?
     let formatted = print(&tree, &PrettyPrintParameters {
         indent_size: editorconfig.indent_size.unwrap_or(4),
-        max_line_length: 100,
+        max_line_length: editorconfig.max_line_length.unwrap_or(100),
     });
 
     write(&path, formatted).expect("Unable to write to file");
@@ -80,9 +81,13 @@ mod tests {
     test_each_file! { in "./data" => compare_parsed_to_original }
 
     fn compare_parsed_to_original(content: &str) {
+        let trailing_newline = if content.ends_with("\n") { "\n" } else { "\n" };
+
+        let test_content = content.lines().filter(|line| !line.starts_with("// NOTE:")).collect::<Vec<&str>>().join("\n") + trailing_newline;
+
         let mut parser = Parser::of(Language::Java);
 
-        let tree = parser.parse(&content).unwrap();
+        let tree = parser.parse(&test_content).unwrap();
 
         print_as_tree(&tree, 0);
 
@@ -91,6 +96,6 @@ mod tests {
 
         // println!("{}", formatted);
 
-        assert_eq!(content, formatted);
+        assert_eq!(test_content, formatted);
     }
 }

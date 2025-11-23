@@ -5,7 +5,7 @@ use crate::render::{prettyprint, PrettyPrintParameters, WrapParameters};
 use crate::transform::transform;
 
 pub fn print(node: &Tree, arguments: &PrettyPrintParameters) -> String {
-    // print_as_tree(&transform(node), 0);
+    print_as_tree(&transform(node), 0);
     return prettyprint(&transform(node), arguments, WrapParameters::default()).result + "\n";
 }
 
@@ -20,7 +20,9 @@ pub fn print_as_tree(node: &FormatNode, indent: usize) {
         FormatNode::Newline => "Newline",
     };
 
-    println!("{}{}", " ".repeat(indent), name);
+    let hash: u64 = node.get_hash();
+
+    println!("{}{} ({:X})", " ".repeat(indent), name, hash);
 
     if let FormatNode::Wrap(_, wrap) = node {
         println!("{}{:?}", " ".repeat(indent + 4), wrap);

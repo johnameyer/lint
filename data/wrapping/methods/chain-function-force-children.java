@@ -1,0 +1,5 @@
+myReallyReallyStupidlyLongMemberName.myFunctionName()
+    .myFunctionName()
+    .myFunctionName()
+    .myFunctionName()
+    .myReallyReallyReallyStupidlyLongFunctionName()
