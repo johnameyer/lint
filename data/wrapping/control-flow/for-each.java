@@ -1,4 +1,2 @@
-for (
-    var x : myReallyReallyReallyReallyStupidlyLongMemberName
-        .myReallyReallyReallyReallyStupidlyLongFunctionName()
-) { }
+for (var x : myReallyReallyReallyReallyStupidlyLongMemberName
+    .myReallyReallyReallyReallyStupidlyLongFunctionName()) { }

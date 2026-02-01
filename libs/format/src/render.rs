@@ -36,6 +36,7 @@ const MAX_LINE_LENGTH: usize = 100;
 pub fn prettyprint(formatted: &FormatNode, arguments: &PrettyPrintParameters, parent_wrap: WrapParameters) -> PrettyPrintResult {
     // println!("{:?}", formatted);
 
+    // Simply print without checking line length - auto-wrapping is turned off
     let transformed = print(
         formatted,
         arguments,
@@ -46,50 +47,7 @@ pub fn prettyprint(formatted: &FormatNode, arguments: &PrettyPrintParameters, pa
         parent_wrap,
     );
 
-    let can_wrap = match formatted {
-        FormatNode::Group(elements) => elements
-            .iter()
-            .any(|element| matches!(element, FormatNode::Wrap { .. })),
-        _ => false,
-    };
-
-    if can_wrap
-        && (transformed.is_wrapped
-            || transformed
-                .result
-                .lines()
-                .any(|line| line.len() > arguments.max_line_length))
-    {
-        let wrap_because_child = transformed.is_wrapped;
-        let wrap_because_length = transformed
-            .result
-            .lines()
-            .any(|line| line.len() > arguments.max_line_length);
-
-        // TODO sometimes we fail to properly wrap a child, causing our parent to wrap when it shouldn't see unwrappable-child test example
-        // This check against all children can potentially cause slowdowns as well
-
-        let params = WrapParameters {
-            wrap_because_length,
-            wrap_because_child,
-        };
-
-        let new = print(formatted, arguments, params, parent_wrap);
-
-        if transformed.result.lines().any(|line| line.len() > arguments.max_line_length) {
-            // panic!("Unexpectedly long line! {:?} {:?}", formatted, transformed);
-        }
-
-        PrettyPrintResult {
-            result: new.result,
-            is_wrapped: true,
-        }
-    } else {
-        PrettyPrintResult {
-            result: transformed.result,
-            is_wrapped: transformed.is_wrapped,
-        }
-    }
+    transformed
 }
 
 // TODO should we build the tree different to avoid needing the parent_wrap struct? I.e. two separate types?
@@ -121,9 +79,11 @@ fn print(
                 wrap_with_indent,
                 or_space,
                 child_wrap_prevents_wrap,
+                has_newline_in_source,
             },
         ) => {
-            let should_wrap = parent_wrap.wrap_because_length || parent_wrap.wrap_because_child;
+            // Instead of auto-wrapping based on line length, honor existing newlines in source
+            let should_wrap = *has_newline_in_source;
             let content = prettyprint(&element, arguments, wrap);
             let transformed_content = if should_wrap {
                 "\n".to_owned()

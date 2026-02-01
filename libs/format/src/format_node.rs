@@ -17,4 +17,5 @@ pub struct WrapArguments {
     pub child_wrap_prevents_wrap: bool,
     pub wrap_with_indent: bool,
     pub or_space: bool,
+    pub has_newline_in_source: bool,
 }
