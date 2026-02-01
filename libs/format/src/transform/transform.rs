@@ -56,6 +56,16 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
             }
 
             if between.wrap {
+                // Check if there's a newline at this wrap position in the source
+                let has_newline_in_source = if let Some(previous) = index
+                    .checked_sub(1)
+                    .and_then(|prev_index| node.children().get(prev_index))
+                {
+                    child.range().start_point.row > previous.range().end_point.row
+                } else {
+                    false
+                };
+
                 let previous = stack.pop().unwrap();
                 if let Some(wrapping) = previous.wrapping {
                     stack.last_mut().unwrap().children.push(FormatNode::Wrap(
@@ -75,6 +85,7 @@ pub fn transform<'source>(node: &Tree<'source>) -> FormatNode {
                         child_wrap_prevents_wrap: between.child_wrap_prevents_wrap,
                         wrap_with_indent: between.indent,
                         or_space: between.space,
+                        has_newline_in_source,
                     }),
                 });
 

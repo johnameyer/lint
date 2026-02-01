@@ -1,6 +1,2 @@
-for (
-    int i = 0;
-    myReallyReallyReallyReallyStupidlyLongMemberName
-        .myReallyReallyReallyReallyStupidlyLongFunctionName();
-    i++
-) { }
+for (int i = 0; myReallyReallyReallyReallyStupidlyLongMemberName
+    .myReallyReallyReallyReallyStupidlyLongFunctionName(); i++) { }

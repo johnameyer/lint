@@ -1,3 +1,3 @@
 public class Xyz {
-    @Annotation(names = {"", ""}) Object o;
+    @Annotation(names = { "", "" }) Object o;
 }

@@ -1,3 +1,1 @@
-try (
-    var x = expr
-) { }
+try (var x = expr) { }

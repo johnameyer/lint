@@ -1,4 +1,1 @@
-try (
-	var x = expr;
-	var y = expr
-) { }
+try (var x = expr; var y = expr) { }
