@@ -36,7 +36,9 @@ const MAX_LINE_LENGTH: usize = 100;
 pub fn prettyprint(formatted: &FormatNode, arguments: &PrettyPrintParameters, parent_wrap: WrapParameters) -> PrettyPrintResult {
     // println!("{:?}", formatted);
 
-    // Simply print without checking line length - auto-wrapping is turned off
+    // Auto-wrapping based on line length is turned off. Instead, newlines are preserved from
+    // the source code at wrap positions. This means we simply print the tree once without
+    // checking line lengths and re-rendering with wrapping enabled.
     let transformed = print(
         formatted,
         arguments,
